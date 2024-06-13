@@ -1,12 +1,10 @@
-const allModals = document.querySelectorAll('.popup');
-
-export function openModal(e) {
-  e.classList.add('popup_is-opened');
+export function openModal(popup) {
+  popup.classList.add('popup_is-opened');
   document.addEventListener('keydown', handleEscape);
 }
 
-export function closeModal(e) {
-  e.classList.remove('popup_is-opened');
+export function closeModal(popup) {
+  popup.classList.remove('popup_is-opened');
   document.removeEventListener('keydown', handleEscape);
 }
 
@@ -19,6 +17,6 @@ export function handleOverlayClick(e) {
 
 function handleEscape(e) {
   if (e.key === 'Escape') {
-    allModals.forEach(item => item.classList.remove('popup_is-opened'))
+    document.querySelector('.popup_is-opened').classList.remove('popup_is-opened');
   }
 }

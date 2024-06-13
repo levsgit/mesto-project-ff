@@ -11,15 +11,16 @@ export const likeCard = function (e) {
 
 export function createCard(card, deleteFunc, likeFunc, zoomFunc) {
   const cardElement = cardTemplate.querySelector('.places__item').cloneNode(true);
+  const cardImage = cardElement.querySelector('.card__image');
   const link = card.link;
   const name = card.name;
 
-  cardElement.querySelector('.card__image').src = link;
-  cardElement.querySelector('.card__image').alt = name;
+  cardImage.src = link;
+  cardImage.alt = name;
   cardElement.querySelector('.card__title').textContent = name;
   cardElement.querySelector('.card__delete-button').addEventListener('click', deleteFunc);
   cardElement.querySelector('.card__like-button').addEventListener('click', likeFunc);
-  cardElement.querySelector('.card__image').addEventListener('click', zoomFunc);
+  cardImage.addEventListener('click', zoomFunc);
 
   return cardElement;
 }

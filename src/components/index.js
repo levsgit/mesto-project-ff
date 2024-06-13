@@ -1,5 +1,5 @@
 import './cards.js';
-import './styles/index.css';
+import '../styles/index.css';
 
 import { initialCards } from './cards.js';
 import { createCard, deleteCard, likeCard } from './card.js';
@@ -11,6 +11,8 @@ const profileEditButton = document.querySelector('.profile__edit-button');
 const popupNewCard = document.querySelector('.popup_type_new-card');
 const popupEditProfile = document.querySelector('.popup_type_edit');
 const popupZoomCard = document.querySelector('.popup_type_image');
+const popupZoomCardImage = popupZoomCard.querySelector('.popup__image')
+const popupZoomCardCaption = popupZoomCard.querySelector('.popup__caption');
 
 // Zoom image from card function
 const zoomCard = function (e) {
@@ -18,14 +20,11 @@ const zoomCard = function (e) {
   const currentCardImage = currentCard.querySelector('.card__image');
   const currentCardCaption = currentCard.querySelector('.card__title');
 
-  const popupZoomCardImage = popupZoomCard.querySelector('.popup__image')
-  const popupZoomCardCaption = popupZoomCard.querySelector('.popup__caption');
-
   popupZoomCardImage.src = currentCardImage.src;
   popupZoomCardImage.alt = currentCardImage.alt;
   popupZoomCardCaption.textContent = currentCardCaption.textContent;
 
-  popupZoomCard.classList.add('popup_is-opened');
+  openModal(popupZoomCard);
 }
 
 // Base cards
@@ -40,11 +39,13 @@ document.querySelectorAll('.popup').forEach(item => item.addEventListener('click
 const profileTitle = document.querySelector('.profile__title');
 const profileDescription = document.querySelector('.profile__description');
 const editProfileForm = document.forms['edit-profile'];
+const editProfileFormName = editProfileForm.elements.name;
+const editProfileFormDescription = editProfileForm.elements.description;
 
 profileEditButton.addEventListener('click', function (e) {
   openModal(popupEditProfile);
-  editProfileForm.elements.name.value = profileTitle.textContent;
-  editProfileForm.elements.description.value = profileDescription.textContent;
+  editProfileFormName.value = profileTitle.textContent;
+  editProfileFormDescription.value = profileDescription.textContent;
 });
 
 editProfileForm.addEventListener('submit', function (e) {
