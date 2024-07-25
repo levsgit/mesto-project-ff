@@ -1,21 +1,52 @@
 import './cards.js';
 import '../styles/index.css';
 
-import { initialCards } from './cards.js';
 import { createCard, deleteCard, likeCard } from './card.js';
-import { openModal, closeModal, handleOverlayClick } from './modal.js';
+import { openModal, closeModal, handleOverlayClick, toggleLoadingPhrase } from './modal.js';
+import { enableValidation, clearValidation } from './validation.js';
+import { getUserAsync, getInitialCardsAsync, addCardAsync, editProfileAsync, editProfileImageAsync } from './api.js';
+
+const validationConfig = {
+  formSelector: '.popup__form',
+  inputSelector: '.popup__input',
+  submitButtonSelector: '.popup__button',
+  inactiveButtonClass: 'popup__button_disabled',
+  inputErrorClass: 'popup__input_type_error',
+  errorClass: 'popup__error_visible'
+};
 
 const cardsList = document.querySelector('.places__list');
 const newCardButton = document.querySelector('.profile__add-button');
+const profileImageEditButton = document.querySelector('.profile__image-edit-button');
 const profileEditButton = document.querySelector('.profile__edit-button');
 const popupNewCard = document.querySelector('.popup_type_new-card');
 const popupEditProfile = document.querySelector('.popup_type_edit');
+const popupEditProfileImage = document.querySelector('.popup_type_edit_avatar');
+const popupEditProfileImageForm = popupEditProfileImage.querySelector(validationConfig.formSelector);
+const popupEditProfileForm = popupEditProfile.querySelector(validationConfig.formSelector);
 const popupZoomCard = document.querySelector('.popup_type_image');
 const popupZoomCardImage = popupZoomCard.querySelector('.popup__image')
 const popupZoomCardCaption = popupZoomCard.querySelector('.popup__caption');
 
+const profileImageElement = document.querySelector('.profile__image');
+const profileTitleElement = document.querySelector('.profile__title');
+const profileDescriptionElement = document.querySelector('.profile__description');
+
+// Load data
+Promise.all([getUserAsync(), getInitialCardsAsync()]).then(([userData, cardsData]) => {
+  // Load profile data
+  profileImageElement.style.backgroundImage = "url('" + userData.avatar + "')";
+  profileTitleElement.textContent = userData.name;
+  profileDescriptionElement.textContent = userData.about;
+
+  // Load initial cards
+  cardsData.forEach(function (item) {
+    cardsList.append(createCard(item, deleteCard, likeCard, zoomCard));
+  });
+});
+
 // Zoom image from card function
-const zoomCard = function (e) {
+export const zoomCard = function (e) {
   const currentCard = e.target.closest('.places__item');
   const currentCardImage = currentCard.querySelector('.card__image');
   const currentCardCaption = currentCard.querySelector('.card__title');
@@ -26,11 +57,6 @@ const zoomCard = function (e) {
 
   openModal(popupZoomCard);
 }
-
-// Base cards
-initialCards.forEach(item => {
-  cardsList.append(createCard(item, deleteCard, likeCard, zoomCard));
-});
 
 // Handle overlay clicks in modals
 document.querySelectorAll('.popup').forEach(item => item.addEventListener('click', handleOverlayClick));
@@ -43,37 +69,60 @@ const editProfileFormName = editProfileForm.elements.name;
 const editProfileFormDescription = editProfileForm.elements.description;
 
 profileEditButton.addEventListener('click', function (e) {
+  toggleLoadingPhrase(editProfileForm, validationConfig);
   openModal(popupEditProfile);
+  clearValidation(popupEditProfileForm, validationConfig);
   editProfileFormName.value = profileTitle.textContent;
   editProfileFormDescription.value = profileDescription.textContent;
 });
 
 editProfileForm.addEventListener('submit', function (e) {
   e.preventDefault();
-  profileTitle.textContent = editProfileForm.elements.name.value;
-  profileDescription.textContent = editProfileForm.elements.description.value;
-  closeModal(popupEditProfile);
+  toggleLoadingPhrase(editProfileForm, validationConfig);
+  editProfileAsync(editProfileForm.elements.name.value, editProfileForm.elements.description.value)
+    .then((data) => {
+      profileTitleElement.textContent = data.name;
+      profileDescriptionElement.textContent = data.about;
+      closeModal(popupEditProfile);
+    });
 });
 
 // New card functional
-const newCardForm = document.forms['new-place'];
-const placeName = newCardForm.elements['place-name'];
-const placeImageLink = newCardForm.elements['link'];
+const popupNewCardForm = document.forms['new-place'];
+const placeName = popupNewCardForm.elements['place-name'];
+const placeImageLink = popupNewCardForm.elements['link'];
 
 newCardButton.addEventListener('click', function () {
+  toggleLoadingPhrase(popupNewCardForm, validationConfig);
   openModal(popupNewCard);
+  clearValidation(popupNewCardForm, validationConfig);
 });
 
-newCardForm.addEventListener('submit', function (e) {
+popupNewCardForm.addEventListener('submit', function (e) {
   e.preventDefault();
-
-  const cardObj = {
-    name: placeName.value,
-    link: placeImageLink.value,
-  };
-  const cardElem = createCard(cardObj, deleteCard, likeCard, zoomCard);
-  cardsList.prepend(cardElem);
-
-  closeModal(popupNewCard);
-  newCardForm.reset();
+  toggleLoadingPhrase(popupNewCardForm, validationConfig);
+  addCardAsync(placeName.value, placeImageLink.value).then((data) => {
+    cardsList.prepend(createCard(data, deleteCard, likeCard, zoomCard));
+    closeModal(popupNewCard);
+    popupNewCardForm.reset();
+  });
 });
+
+// Edit avatar functional 
+profileImageEditButton.addEventListener('click', function (e) {
+  toggleLoadingPhrase(popupNewCardForm, validationConfig);
+  openModal(popupEditProfileImage);
+  clearValidation(popupEditProfileImageForm, validationConfig);
+});
+
+popupEditProfileImageForm.addEventListener('submit', function (e) {
+  e.preventDefault();
+  toggleLoadingPhrase(popupNewCardForm, validationConfig);
+  editProfileImageAsync(e.target.elements['avatar-link-input'].value).then((data) => {
+    profileImageElement.style.backgroundImage = "url('" + data.avatar + "')";
+    closeModal(popupEditProfileImage);
+    popupEditProfileImageForm.reset();
+  });
+});
+
+enableValidation(validationConfig);
