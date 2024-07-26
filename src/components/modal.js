@@ -1,6 +1,5 @@
 export function openModal(popup) {
   popup.classList.add('popup_is-opened');
-  popup.querySelector('.popup__button').textContent = 'Сохранить';
   document.addEventListener('keydown', handleEscape);
 }
 
@@ -22,7 +21,7 @@ function handleEscape(e) {
   }
 }
 
-export function toggleLoadingPhrase(form, validationConfig) {
+export function toggleLoadingPhrase(form, validationConfig, isLoading) {
   const formButton = form.querySelector(validationConfig.submitButtonSelector);
-  formButton.textContent = formButton.textContent === 'Сохранить' ? 'Сохранение...' : 'Сохранить';
+  formButton.textContent = isLoading ? 'Сохранение...' : 'Сохранить';
 }

@@ -19,9 +19,8 @@
 }
 
 .popup__error {
-  display: inline-block;
-  min-height: 2em;
-  opacity: 0;
+  display: none;
+  color: #FF0000;
   font-family: 'Inter', Arial, sans-serif;
   font-weight: 400;
   font-size: 12px;
@@ -30,8 +29,7 @@
 }
 
 .popup__error_visible {
-  opacity: 1;
-  color: #FF0000;
+  display: inline-block;
 }
 
 @media screen and (max-width: 568px) {

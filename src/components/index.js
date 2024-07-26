@@ -32,18 +32,24 @@ const profileImageElement = document.querySelector('.profile__image');
 const profileTitleElement = document.querySelector('.profile__title');
 const profileDescriptionElement = document.querySelector('.profile__description');
 
-// Load data
-Promise.all([getUserAsync(), getInitialCardsAsync()]).then(([userData, cardsData]) => {
-  // Load profile data
-  profileImageElement.style.backgroundImage = "url('" + userData.avatar + "')";
-  profileTitleElement.textContent = userData.name;
-  profileDescriptionElement.textContent = userData.about;
+let currentUserId = '';
 
-  // Load initial cards
-  cardsData.forEach(function (item) {
-    cardsList.append(createCard(item, deleteCard, likeCard, zoomCard));
+// Load data
+Promise.all([getUserAsync(), getInitialCardsAsync()])
+  .then(([userData, cardsData]) => {
+    // Load profile data
+    profileImageElement.style.backgroundImage = "url('" + userData.avatar + "')";
+    profileTitleElement.textContent = userData.name;
+    profileDescriptionElement.textContent = userData.about;
+    currentUserId = userData._id;
+    // Load initial cards
+    cardsData.forEach(function (item) {
+      cardsList.append(createCard(item, deleteCard, likeCard, zoomCard, currentUserId));
+    });
+  })
+  .catch((err) => {
+    console.log(err);
   });
-});
 
 // Zoom image from card function
 export const zoomCard = function (e) {
@@ -69,7 +75,6 @@ const editProfileFormName = editProfileForm.elements.name;
 const editProfileFormDescription = editProfileForm.elements.description;
 
 profileEditButton.addEventListener('click', function (e) {
-  toggleLoadingPhrase(editProfileForm, validationConfig);
   openModal(popupEditProfile);
   clearValidation(popupEditProfileForm, validationConfig);
   editProfileFormName.value = profileTitle.textContent;
@@ -78,13 +83,16 @@ profileEditButton.addEventListener('click', function (e) {
 
 editProfileForm.addEventListener('submit', function (e) {
   e.preventDefault();
-  toggleLoadingPhrase(editProfileForm, validationConfig);
+  toggleLoadingPhrase(editProfileForm, validationConfig, true);
   editProfileAsync(editProfileForm.elements.name.value, editProfileForm.elements.description.value)
     .then((data) => {
       profileTitleElement.textContent = data.name;
       profileDescriptionElement.textContent = data.about;
       closeModal(popupEditProfile);
-    });
+    })
+    .catch((err) => {
+      console.log(err);
+    }).finally(() => toggleLoadingPhrase(editProfileForm, validationConfig, false));
 });
 
 // New card functional
@@ -93,36 +101,39 @@ const placeName = popupNewCardForm.elements['place-name'];
 const placeImageLink = popupNewCardForm.elements['link'];
 
 newCardButton.addEventListener('click', function () {
-  toggleLoadingPhrase(popupNewCardForm, validationConfig);
   openModal(popupNewCard);
   clearValidation(popupNewCardForm, validationConfig);
 });
 
 popupNewCardForm.addEventListener('submit', function (e) {
   e.preventDefault();
-  toggleLoadingPhrase(popupNewCardForm, validationConfig);
+  toggleLoadingPhrase(popupNewCardForm, validationConfig, true);
   addCardAsync(placeName.value, placeImageLink.value).then((data) => {
-    cardsList.prepend(createCard(data, deleteCard, likeCard, zoomCard));
+    cardsList.prepend(createCard(data, deleteCard, likeCard, zoomCard, currentUserId));
     closeModal(popupNewCard);
     popupNewCardForm.reset();
-  });
+  })
+    .catch((err) => {
+      console.log(err);
+    }).finally(() => toggleLoadingPhrase(popupNewCardForm, validationConfig, false));
 });
 
 // Edit avatar functional 
 profileImageEditButton.addEventListener('click', function (e) {
-  toggleLoadingPhrase(popupNewCardForm, validationConfig);
   openModal(popupEditProfileImage);
   clearValidation(popupEditProfileImageForm, validationConfig);
 });
 
 popupEditProfileImageForm.addEventListener('submit', function (e) {
   e.preventDefault();
-  toggleLoadingPhrase(popupNewCardForm, validationConfig);
+  toggleLoadingPhrase(popupEditProfileImageForm, validationConfig, true);
   editProfileImageAsync(e.target.elements['avatar-link-input'].value).then((data) => {
     profileImageElement.style.backgroundImage = "url('" + data.avatar + "')";
     closeModal(popupEditProfileImage);
     popupEditProfileImageForm.reset();
-  });
+  }).catch((err) => {
+    console.log(err);
+  }).finally(() => toggleLoadingPhrase(popupEditProfileImageForm, validationConfig, false));
 });
 
 enableValidation(validationConfig);
